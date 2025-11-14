@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dashboard API Test</title>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            background: #1e1e1e;
+            color: #d4d4d4;
+        }
+        .section {
+            background: #252526;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        h2 {
+            color: #4ec9b0;
+        }
+        pre {
+            background: #1e1e1e;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        button {
+            background: #0e639c;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #1177bb;
+        }
+        .status {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 3px;
+            margin-left: 10px;
+        }
+        .success { background: #4ec9b0; color: black; }
+        .error { background: #f48771; color: black; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Dashboard API Test</h1>
+    
+    <div class="section">
+        <h2>Gateway Info</h2>
+        <button onclick="testGatewayInfo()">Test /api/gateway-info</button>
+        <span id="gateway-status"></span>
+        <pre id="gateway-result">Click button to test...</pre>
+    </div>
+    
+    <div class="section">
+        <h2>Beacons Data</h2>
+        <button onclick="testBeacons()">Test /api/beacons</button>
+        <span id="beacons-status"></span>
+        <pre id="beacons-result">Click button to test...</pre>
+    </div>
+    
+    <div class="section">
+        <h2>Auto Test</h2>
+        <button onclick="runAllTests()">Run All Tests</button>
+        <button onclick="location.href='/'">Go to Dashboard</button>
+    </div>
+
+    <script>
+        async function testGatewayInfo() {
+            const resultEl = document.getElementById('gateway-result');
+            const statusEl = document.getElementById('gateway-status');
+            
+            try {
+                resultEl.textContent = 'Loading...';
+                statusEl.textContent = '';
+                
+                const response = await fetch('/api/gateway-info');
+                const data = await response.json();
+                
+                resultEl.textContent = JSON.stringify(data, null, 2);
+                statusEl.innerHTML = '<span class="status success">✓ Success</span>';
+            } catch (error) {
+                resultEl.textContent = 'Error: ' + error.message;
+                statusEl.innerHTML = '<span class="status error">✗ Failed</span>';
+            }
+        }
+        
+        async function testBeacons() {
+            const resultEl = document.getElementById('beacons-result');
+            const statusEl = document.getElementById('beacons-status');
+            
+            try {
+                resultEl.textContent = 'Loading...';
+                statusEl.textContent = '';
+                
+                const response = await fetch('/api/beacons');
+                const data = await response.json();
+                
+                resultEl.textContent = JSON.stringify(data, null, 2);
+                statusEl.innerHTML = '<span class="status success">✓ Success</span>';
+            } catch (error) {
+                resultEl.textContent = 'Error: ' + error.message;
+                statusEl.innerHTML = '<span class="status error">✗ Failed</span>';
+            }
+        }
+        
+        async function runAllTests() {
+            await testGatewayInfo();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            await testBeacons();
+        }
+        
+        // Auto-run on load
+        window.addEventListener('load', runAllTests);
+    </script>
+</body>
+</html>

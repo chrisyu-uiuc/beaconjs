@@ -1,0 +1,19 @@
+{
+  "name": "beaconjs",
+  "version": "1.0.0",
+  "description": "",
+  "main": "quick_start.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.931.0",
+    "@aws-sdk/lib-dynamodb": "^3.931.0",
+    "dotenv": "^17.2.3",
+    "uuid": "^13.0.0"
+  }
+}
