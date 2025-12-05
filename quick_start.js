@@ -8,6 +8,10 @@ const scanner = new BeaconScanner();
 // Global reference to storage service
 let beaconStorage = null;
 
+// Rate limiting for beacon storage (reduce AWS calls)
+const beaconLastSeen = new Map(); // Track last storage time per beacon
+const STORAGE_INTERVAL_MS = 5000; // Only store each beacon once per 5 seconds
+
 /**
  * Initialize the application
  */
@@ -43,18 +47,30 @@ async function initialize() {
       // Keep existing console.log for debugging
       console.log(JSON.stringify(ad, null, '  '));
       
-      // Store beacon record (fire-and-forget to avoid blocking scanner)
-      // Don't await - let it run in background
-      beaconStorage.storeBeaconRecord(ad).catch(error => {
-        // Log error details without interrupting beacon detection
-        console.error('[Application] AWS Storage Error - Beacon scanning continues');
-        console.error(`[Application] Error Type: ${error.constructor.name}`);
-        console.error(`[Application] Error Code: ${error.code || error.name || 'Unknown'}`);
-        console.error(`[Application] Error Message: ${error.message}`);
-        if (error.stack) {
-          console.error('[Application] Stack trace:', error.stack);
-        }
-      });
+      // Rate limit storage to reduce AWS calls and improve scanning performance
+      const beaconId = ad.id || ad.address;
+      const now = Date.now();
+      const lastSeen = beaconLastSeen.get(beaconId);
+      
+      // Only store if we haven't stored this beacon recently
+      if (!lastSeen || (now - lastSeen) >= STORAGE_INTERVAL_MS) {
+        beaconLastSeen.set(beaconId, now);
+        
+        // Store beacon record (fire-and-forget to avoid blocking scanner)
+        // Don't await - let it run in background
+        beaconStorage.storeBeaconRecord(ad).catch(error => {
+          // Log error details without interrupting beacon detection
+          console.error('[Application] AWS Storage Error - Beacon scanning continues');
+          console.error(`[Application] Error Type: ${error.constructor.name}`);
+          console.error(`[Application] Error Code: ${error.code || error.name || 'Unknown'}`);
+          console.error(`[Application] Error Message: ${error.message}`);
+          if (error.stack) {
+            console.error('[Application] Stack trace:', error.stack);
+          }
+        });
+      } else {
+        console.log(`[Application] Skipping storage (rate limited) - last stored ${Math.round((now - lastSeen) / 1000)}s ago`);
+      }
     };
     
     // Start scanning with optimized parameters
