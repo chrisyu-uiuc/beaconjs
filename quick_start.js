@@ -61,6 +61,8 @@ async function initialize() {
     console.log('[Application] Starting beacon scanner...');
     // Use faster scan parameters: scan more frequently with shorter intervals
     await scanner.startScan({
+      // Report all advertisements, even duplicates (critical for Pi)
+      duplicates: true,
       // Scan interval: how often to scan (in milliseconds)
       // Lower = more frequent scanning = faster detection
       interval: 100,  // Default is often 1000ms, we use 100ms for faster scanning
