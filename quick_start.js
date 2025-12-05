@@ -39,15 +39,13 @@ async function initialize() {
     console.log('[Application] BeaconStorage initialized successfully');
     
     // Set up advertisement handler
-    scanner.onadvertisement = async (ad) => {
+    scanner.onadvertisement = (ad) => {
       // Keep existing console.log for debugging
       console.log(JSON.stringify(ad, null, '  '));
       
-      // Store beacon record (non-blocking)
-      // Wrap in try-catch to prevent AWS errors from propagating to scanner
-      try {
-        await beaconStorage.storeBeaconRecord(ad);
-      } catch (error) {
+      // Store beacon record (fire-and-forget to avoid blocking scanner)
+      // Don't await - let it run in background
+      beaconStorage.storeBeaconRecord(ad).catch(error => {
         // Log error details without interrupting beacon detection
         console.error('[Application] AWS Storage Error - Beacon scanning continues');
         console.error(`[Application] Error Type: ${error.constructor.name}`);
@@ -56,12 +54,20 @@ async function initialize() {
         if (error.stack) {
           console.error('[Application] Stack trace:', error.stack);
         }
-      }
+      });
     };
     
-    // Start scanning
+    // Start scanning with optimized parameters
     console.log('[Application] Starting beacon scanner...');
-    await scanner.startScan();
+    // Use faster scan parameters: scan more frequently with shorter intervals
+    await scanner.startScan({
+      // Scan interval: how often to scan (in milliseconds)
+      // Lower = more frequent scanning = faster detection
+      interval: 100,  // Default is often 1000ms, we use 100ms for faster scanning
+      // Scan window: how long each scan lasts (in milliseconds)
+      // Higher = more time listening = better detection
+      window: 100     // Match interval for continuous scanning
+    });
     console.log('[Application] Beacon scanner started successfully');
     console.log('[Application] Listening for beacon advertisements...');
     
